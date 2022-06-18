@@ -39,13 +39,13 @@ import sys
 date_debut=sys.argv[1]
 date_fin = sys.argv[2]
 
-query = "SELECT *  FROM cnas  WHERE date_paiement >= '{}' AND date_paiement <= '{}'  ALLOW FILTERING;".format(date_debut,date_fin)
+query = "SELECT *  FROM cnas  WHERE date_paiement >= '{}' AND date_paiement <= '{}' LIMIT 10  ALLOW FILTERING;".format(date_debut,date_fin)
 rows = session.execute(query)
 
 # In[7]:
 
 
-rows
+#rows
     
 
 
@@ -101,14 +101,14 @@ dftable = dftable.astype({"age": int})
 
 # garder les coloumns qu'on est besoin 
 dftable=dftable[['id','fk','codeps','affection','age','applic_tarif','date_paiement','num_enr','sexe','ts','quantite_med','qte_rejet']]
-dftable.info()
+#dftable.info()
 
 
 # In[17]:
 
 
 sparkdf = spark.createDataFrame(dftable)
-sparkdf.printSchema()
+#sparkdf.printSchema()
 spark_rejected = sparkdf.filter(sparkdf.qte_rejet > 0)
 sparkdf = sparkdf.filter(sparkdf.qte_rejet == 0)
 
@@ -128,7 +128,7 @@ sparkdf = sparkdf.filter(sparkdf.qte_rejet == 0)
 
 
 sparkdf = sparkdf.withColumn("affection", split(col("affection"), ",").cast("array<int>"))
-sparkdf.printSchema()
+#sparkdf.printSchema()
 
 #df.sort(col("affection_splited").asc(),col("affection_splited").asc()).show(truncate=False)
 import pyspark.sql.functions as F
@@ -138,7 +138,7 @@ sparkdf = sparkdf.withColumn('affection', F.array_sort('affection'))
 # In[22]:
 
 
-sparkdf.show()
+#sparkdf.show()
 
 
 # In[23]:
@@ -166,7 +166,7 @@ def age_range(age):
 
 
 sparkdf = sparkdf.withColumn("age", age_range(col("age")))
-sparkdf.show()
+#sparkdf.show()
 
 
 # In[24]:
@@ -180,7 +180,7 @@ sparkdf = sparkdf.withColumn("affection",
 # In[25]:
 
 
-sparkdf.printSchema()
+#sparkdf.printSchema()
 
 
 # In[26]:
@@ -196,7 +196,7 @@ df_r=indexer.setHandleInvalid("keep").fit(sparkdf).transform(sparkdf)
 # In[27]:
 
 
-df_r.columns
+#df_r.columns
 
 
 # In[28]:
@@ -211,7 +211,7 @@ output=featureassembler.transform(df_r)
 # In[29]:
 
 
-output.select('Independent Features').show()
+#output.select('Independent Features').show()
 
 
 # In[30]:
@@ -224,7 +224,7 @@ output.show()
 
 
 finalized_data=output.select("Independent Features","quantite_med")
-finalized_data.show(10)
+#finalized_data.show(10)
 
 
 # In[32]:
@@ -260,7 +260,7 @@ pred_results=regressor.evaluate(test_data)
 
 
 ## Final comparison
-pred_results.predictions.show()
+#pred_results.predictions.show()
 
 
 # In[37]:

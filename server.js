@@ -1,6 +1,23 @@
 const express = require('express')
-const app = express()
+const session = require("express-session");
+const cors = require("cors");
+const cookieParser = require("cookie-parser");
 const bodyParser = require("body-parser");
+
+
+
+// les routes 
+const authRouter = require('./routes/auth')
+const bodyParser = require("body-parser");
+
+app.use(session({
+  secret  : 'secret_code',
+  resave: true,
+  saveUninitialized: true,
+}))
+
+const app = express()
+
 
 const cassandra = require('cassandra-driver');
 
@@ -27,10 +44,13 @@ app.get("/",(req,res)=>{
   res.json({toto:"ioi"})
 })
 app.post("/fromtotraining",(req,res)=>{
+
+  date_debut = req.body.debut
+  date_debut = req.body.fin
 var options = {
     scriptPath: '',
     //replace this dates with the ones you will receive from req.body
-    args: ["2022-01-16","2022-01-18"],
+    args: [date_debut,date_debut],
 };
 PythonShell.run('models/model.py', options, function (err, results) {
   if (err) throw err;
@@ -52,4 +72,4 @@ PythonShell.run('models/model.py', options, function (err, results) {
   //or contact the cassandra db from here and return the results in the same way res.json({...results})
 })
 
-app.listen(8080)
+app.listen(3000)
