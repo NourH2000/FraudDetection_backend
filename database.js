@@ -5,3 +5,5 @@ const client = new cassandra.Client({
   localDataCenter: 'datacenter1',
   keyspace: 'user'
 });
+
+//const query = 'SELECT * FROM user';
