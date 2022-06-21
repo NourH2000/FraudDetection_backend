@@ -17,7 +17,7 @@ const client = new cassandra.Client({
 
 
 // get all the historiy ( don't forget to define the feilds of the history table )
-router.get('/allHistories', (req, res) =>{
+router.get('/AllHistories', (req, res) =>{
     const query = 'SELECT * FROM user';    
     try{
         
@@ -36,24 +36,17 @@ router.get('/allHistories', (req, res) =>{
 
 
 // get all the historiy ( don't forget to define the feilds of the history table )
-router.get('/oneHistory/:date', (req, res) =>{
+router.get('/OneHistory/:date', (req, res) =>{
     const date = req.params.date;
-    console.log(date);
-    const query = "SELECT * FROM user where  username= ? ";    
-    try{
-        
-        client.execute(query,['date'], function (err, result) {
-            console.log(result);
-            var Onehistoty = result
+
+    const query = 'SELECT * FROM user WHERE  username= ?  ALLOW FILTERING ';      
+    client.execute(query, [date]).then(result => {
+        console.log(result);
+            var oneHistory = result
             //The row is an Object with column names as property keys. 
-            res.status(200).send(Onehistoty?.rows);
-            
-            
-          });     
-    }catch(err){
-        console.log(err);
-    }
-
- })
-
+            res.status(200).send(oneHistory?.rows);
+    }).catch((err) => {console.log('ERROR :', err);});
+});
+        
+       
 module.exports = router;

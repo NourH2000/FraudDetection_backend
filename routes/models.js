@@ -1,4 +1,5 @@
 const pythonShellScript  = require('../helpers').pythonShellScript;
+const { json } = require('body-parser');
 const express = require('express')
 const db = require('../database')
 const router = express.Router();
@@ -10,11 +11,6 @@ router.get('/', (req, res) => {
     res.json({toto:"models"})
 });
 
-
-router.post('/posts', (req, res) => {
-    
-    console.log(req.body)
-});
 
 
 //call a model ( quantitymodel)
@@ -28,8 +24,13 @@ router.post("/quantitymodel",(req,res)=>{
       //replace this dates with the ones you will receive from req.body
       args: [date_debut,date_fin],
     };
-    const path = 'models/model.py'
-    pythonShellScript(path , options)
+    const path = 'models/quantity_model.py'
+    try{
+      pythonShellScript(path , options)
+      res.status(200).json({msg:"the model has been called successfully"})
+    } catch (err) {
+      res.send(err)
+    }
 
   
   //either contact your model again like this 

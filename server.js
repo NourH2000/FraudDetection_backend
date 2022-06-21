@@ -13,8 +13,9 @@ app.use(bodyParser.urlencoded({ extended: false }));
 //session
 app.use(session({
   secret  : 'secret_code',
+  cookie : { maxAge: 3000},
   resave: true,
-  saveUninitialized: true,
+  saveUninitialized: false,
 }))
 
 
@@ -22,10 +23,12 @@ app.use(session({
 const authRouter = require('./routes/auth')
 const modelsRoute = require('./routes/models')
 const historiqueRoute = require('./routes/historique')
+const usersRoute = require('./routes/users')
 
 
 app.use('/models', modelsRoute);
 app.use('/historique',historiqueRoute);
+app.use('/users', usersRoute);
 app.use('/auth', authRouter); 
 
 app.use(passport.initialize());
