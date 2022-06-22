@@ -25,9 +25,7 @@ router.get('/AllHistories', (req, res) =>{
             var histoty = result
             //The row is an Object with column names as property keys. 
             res.status(200).send(histoty?.rows);
-            
-            
-          });     
+            });     
     }catch(err){
         console.log(err);
     }

@@ -273,36 +273,28 @@ pred_results.r2,pred_results.meanAbsoluteError,pred_results.meanSquaredError
 # In[38]:
 
 
-Final_result = pred_results.predictions.where("quantite_med > prediction ")
-
+# get the prediction column
+prediction = pred_results.predictions
+# round the prediction
 from pyspark.sql.functions import round, col
-Final_result = Final_result.select("Independent Features"  , "quantite_med", round(col('prediction')))
-Final_result.show(50)
-
+prediction = prediction.select("Independent Features"  , "quantite_med", round(col('prediction'))).withColumnRenamed("round(prediction, 0)","Predicted_quantity").withColumnRenamed("quantite_med","Descripted_quantity")
+# keep the suspected line
+prediction = prediction.where("quantite_med > round(prediction, 0) ")
+prediction.show(50)
 
 # In[39]:
 
+# add a predicted rejection 
 
-## resulta + quantité rejeté > 0 : pour la vérification
-#Final_result = pred_results.predictions.where("quantite_med > prediction  ").join(Qnt_rejetée)
-#Final_result.filter(Final_result["qte_rejet"] > 0).show(100)
-#print("le taux de rejet par les controle est :  ", pred_results.predictions.where("quantite_med > prediction  ").count()*100/sparkdf.count() ,"%")
-#print("\n le taux de rejet par le model  est :  ", Qnt_rejetée.filter(Qnt_rejetée["qte_rejet"] > 0).count()*100/sparkdf.count() ,"%")
-
+prediction.withColumn("Rejection", prediction.Descripted_quantity - prediction.Predicted_quantity).show(50)
 
 # In[40]:
 
 
-## new column pour comparer la quantité rejeté reel avec celle de la prédiciton 
-#Comparer =Final_result.filter(Final_result["qte_rejet"] > 0).withColumn("Quantité rejeté de la prédiction",Final_result.quantite_med - Final_result.prediction.cast(IntegerType()))
 
 
 # In[41]:
 
-
-# converting the difference to int 
-#from pyspark.sql.types import IntegerType
-#Comparer = Comparer.withColumn("Quantité rejeté de la prédiction", Comparer["Quantité rejeté de la prédiction"].cast(IntegerType()))
 
 
 # In[ ]:

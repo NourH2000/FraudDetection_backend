@@ -197,8 +197,8 @@ regressor=regressor.fit(train_data)
 
 
 # result
-print("Coefficients: %s" % str(regressor.coefficients))
-print("Intercept: %s" % str(regressor.intercept))
+#print("Coefficients are : %s" % str(regressor.coefficients ))
+#print("Intercept: %s" % str(regressor.intercept))
 
 
 # In[ ]:
@@ -221,9 +221,17 @@ pred_results.r2,pred_results.meanAbsoluteError,pred_results.meanSquaredError
 
 
 # print the final predicted quantity ( rounded ) vs the real quantity
-Final_result = pred_results.predictions.where("quantite_med > prediction ")
-
+# get the prediction column
+prediction = pred_results.predictions
+# round the prediction
 from pyspark.sql.functions import round, col
-Final_result = Final_result.select("Independent Features"  , "quantite_med", round(col('prediction')))
-Final_result.show(50)
+prediction = prediction.select("Independent Features"  , "quantite_med", round(col('prediction'))).withColumnRenamed("round(prediction, 0)","Predicted_quantity").withColumnRenamed("quantite_med","Descripted_quantity")
+# keep the suspected line
+prediction = prediction.where("quantite_med > round(prediction, 0) ")
+#prediction.show(50)
+
+# add a predicted rejection 
+Final_result = prediction.withColumn("Rejection", prediction.Descripted_quantity - prediction.Predicted_quantity)
+Final_result.show()
+
 
