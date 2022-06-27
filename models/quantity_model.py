@@ -38,7 +38,7 @@ import sys
 date_debut=sys.argv[1]
 date_fin = sys.argv[2]
 
-query = "SELECT *  FROM cnas  WHERE date_paiement >= '{}' AND date_paiement <= '{}' LIMIT 10  ALLOW FILTERING;".format(date_debut,date_fin)
+query = "SELECT *  FROM cnas  WHERE date_paiement >= '{}' AND date_paiement <= '{}' LIMIT 200 ALLOW FILTERING;".format(date_debut,date_fin)
 rows = session.execute(query)
 #print the data : print(rows)
 
@@ -78,6 +78,8 @@ dftable.duree_traitement.fillna(value=0, inplace=True)
 dftable = dftable.astype({"affection": str})
 dftable = dftable.astype({"fk": float})
 dftable = dftable.astype({"age": int})
+dftable = dftable.astype({"date_paiement": str})
+
 
 
 # In[ ]:
@@ -86,8 +88,8 @@ dftable = dftable.astype({"age": int})
 # garder les coloumns qu'on est besoin 
 dftable=dftable[['id','fk','codeps','affection','age','applic_tarif','date_paiement','num_enr','sexe','ts','quantite_med','qte_rejet']]
 # print the columns that we need : dftable.info()
-
-
+#add column 'count_medicament' that gives the count of every num_enr
+dftable['count_Medicament'] = dftable.groupby('num_enr')['num_enr'].transform('count')
 # In[ ]:
 
 
@@ -171,7 +173,7 @@ df_r=indexer.setHandleInvalid("keep").fit(sparkdf).transform(sparkdf)
 # put the data into one vector 
 from pyspark.ml.feature import VectorAssembler
 featureassembler=VectorAssembler(inputCols=['id','fk','age_indexes','sex_indexed','affection_indexes',
-                          'ts_indexes','quantite_med',],outputCol="Independent Features")
+                          'ts_indexes','quantite_med',],outputCol="Features")
 output=featureassembler.transform(df_r)
 
 
@@ -179,7 +181,7 @@ output=featureassembler.transform(df_r)
 
 
 #prepare the data to fit it to the model 
-finalized_data=output.select("Independent Features","quantite_med")
+finalized_data=output.select("Features","quantite_med")
 
 
 # In[ ]:
@@ -189,7 +191,7 @@ finalized_data=output.select("Independent Features","quantite_med")
 from pyspark.ml.regression import LinearRegression
 ##train test split
 train_data,test_data=finalized_data.randomSplit([0.75,0.25])
-regressor=LinearRegression(featuresCol='Independent Features', labelCol='quantite_med', maxIter=10, regParam=0.3, elasticNetParam=0.8)
+regressor=LinearRegression(featuresCol='Features', labelCol='quantite_med', maxIter=10, regParam=0.3, elasticNetParam=0.8)
 regressor=regressor.fit(train_data)
 
 
@@ -202,16 +204,16 @@ regressor=regressor.fit(train_data)
 
 
 # In[ ]:
-
-
 ### Predictions
 pred_results=regressor.evaluate(test_data)
 ## Final comparison
 # print the prediction vs the vector : pred_results.predictions.show()
 
+## get the Training_date
+from datetime import date
+today = date.today()
 
 # In[ ]:
-
 
 ### Performance Metrics
 pred_results.r2,pred_results.meanAbsoluteError,pred_results.meanSquaredError
@@ -225,7 +227,7 @@ pred_results.r2,pred_results.meanAbsoluteError,pred_results.meanSquaredError
 prediction = pred_results.predictions
 # round the prediction
 from pyspark.sql.functions import round, col
-prediction = prediction.select("Independent Features"  , "quantite_med", round(col('prediction'))).withColumnRenamed("round(prediction, 0)","Predicted_quantity").withColumnRenamed("quantite_med","Descripted_quantity")
+prediction = prediction.select("Features"  , "quantite_med", round(col('prediction'))).withColumnRenamed("round(prediction, 0)","Predicted_quantity").withColumnRenamed("quantite_med","Descripted_quantity")
 # keep the suspected line
 prediction = prediction.where("quantite_med > round(prediction, 0) ")
 #prediction.show(50)
@@ -233,5 +235,35 @@ prediction = prediction.where("quantite_med > round(prediction, 0) ")
 # add a predicted rejection 
 Final_result = prediction.withColumn("Rejection", prediction.Descripted_quantity - prediction.Predicted_quantity)
 Final_result.show()
+#Final_result.count()
+# joint the original data with the resukt_data to get all the informations
+Final_result = Final_result.join(output,Final_result.Features ==  output.Features,"inner")
+Final_result.select("date_paiement").show()
 
+#add Count_medicament_suspected that count the count of suspected time this drug shows
+from pyspark.sql import Window
+Final_result = Final_result.withColumn('Count_medicament_suspected', F.count(
+    'num_enr').over(Window.partitionBy('num_enr')))
+
+##connection to cassandra database and fraud keyspace
+session2 = cluster.connect('fraud')
+#get the last id of training 
+bigId = session2.execute("select * from params where param='Max_Id_Entrainement_Quantity';")
+id_training = bigId.one().value
+
+#iterate the data (insert it into cassandra keyspace) : 
+data_collect = Final_result.collect()
+query = "INSERT INTO Quantity_result (id , fk , no_assure , id_entrainement , quantite_med , quantite_predicted , qte_rejet_predicted , count_medicament , count_medicament_suspected , num_enr , date_entrainement , date_paiement ) VALUES (now() ,%s, %s ,%s , %s ,%s ,%s ,%s ,%s ,%s ,%s ,%s )"
+num_assuree = 1
+for row in data_collect:
+    # while looping through each
+    # row printing the data of Id, Name and City
+    print(row["fk"])
+    future = session2.execute(query, [row["fk"] ,num_assuree , id_training , row["Descripted_quantity"] , row["Predicted_quantity"] ,row["Rejection"] ,row["count_Medicament"] ,row["Count_medicament_suspected"] , row["num_enr"] , today , row["date_paiement"] ])
+    num_assuree = num_assuree +1
+
+#Increment the id of training 
+session2.execute("UPDATE params SET value = value + 1 WHERE param ='Max_Id_Entrainement_Quantity' ;")
+
+    
 

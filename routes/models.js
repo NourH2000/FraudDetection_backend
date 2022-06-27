@@ -1,5 +1,4 @@
-//const pythonShellScript  = require('../helpers').pythonShellScript; and delete the next line
-var { PythonShell } = require('python-shell');
+const pythonShellScript  = require('../helpers').pythonShellScript;
 
 const { json } = require('body-parser');
 const express = require('express')
@@ -39,24 +38,7 @@ router.post("/quantitymodel",(req,res)=>{
     const path = 'models/quantity_model.py'
     try{
 
-      PythonShell.run(path, options, function (err, results) {
-        if (err) throw err;
-        //during execution of script.
-         //console.log('result: ', results);
-         res.json({...results})
-         
-////////////////////////////////////
-
-         try{client.execute(query, function (err, result) {
-          var max = result
-          //The row is an Object with column names as property keys. 
-          console.log(max?.rows);
-          });}
-          catch (err) {console.log(err.message);}
-////////////////////////////////////
-         
-        
-      });
+      pythonShellScript(path, options);
     } catch (err) {
       res.send(err)
     }
