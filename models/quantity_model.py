@@ -38,7 +38,7 @@ import sys
 date_debut=sys.argv[1]
 date_fin = sys.argv[2]
 
-query = "SELECT *  FROM cnas  WHERE date_paiement >= '{}' AND date_paiement <= '{}' LIMIT 200 ALLOW FILTERING;".format(date_debut,date_fin)
+query = "SELECT *  FROM cnas  WHERE date_paiement >= '{}' AND date_paiement <= '{}' LIMIT 300 ALLOW FILTERING;".format(date_debut,date_fin)
 rows = session.execute(query)
 #print the data : print(rows)
 
@@ -264,6 +264,13 @@ for row in data_collect:
 
 #Increment the id of training 
 session2.execute("UPDATE params SET value = value + 1 WHERE param ='Max_Id_Entrainement_Quantity' ;")
+
+#insert the HistoryTrainings into cassandra table 
+type_training = 1
+status =" "
+query ="INSERT INTO HistoryTrainings (id , date , statut , type ) VALUES (%s, %s ,%s ,%s) "
+adToHistory = session2.execute(query, [id_training ,today, status , type_training] )
+
 
     
 
