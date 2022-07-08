@@ -23,6 +23,27 @@ try:
 
     # connection to cassandra database and cnas keyspace
     cluster = Cluster(['127.0.0.1'])
+
+    # get the Training_date
+    today = date.today()
+    # connection to cassandra database and fraud keyspace
+    session2 = cluster.connect('fraud')
+    # get the last id of training
+    bigIdValue = session2.execute(
+        "select * from params where param='Max_Id_Entrainement_Quantity';")
+    id_training = bigIdValue.one().value
+    # insert the HistoryTrainings into cassandra table
+    type_training = 1
+    status = 0
+    query = "INSERT INTO HistoryTrainings (id , date , status , type ) VALUES (%s, %s ,%s ,%s) "
+    addToHistory = session2.execute(
+        query, [id_training, today, status, type_training])
+
+    # Increment the id of training
+    session2.execute(
+        "UPDATE params SET value = value + 1 WHERE param ='Max_Id_Entrainement_Quantity' ;")
+
+    # connect to the CNAS  database (temporary)
     session = cluster.connect('cnas')
     # get parameters (start_date and end_date)
 
@@ -120,8 +141,6 @@ try:
 
     # Predictions
     pred_results = regressor.evaluate(test_data)
-    # get the Training_date
-    today = date.today()
 
     pred_results.r2, pred_results.meanAbsoluteError, pred_results.meanSquaredError
     # print the final predicted quantity ( rounded ) vs the real quantity
@@ -148,13 +167,6 @@ try:
     Final_result = Final_result.withColumn('Count_medicament_suspected', F.count(
         'num_enr').over(Window.partitionBy('num_enr')))
 
-    # connection to cassandra database and fraud keyspace
-    session2 = cluster.connect('fraud')
-    # get the last id of training
-    bigIdValue = session2.execute(
-        "select * from params where param='Max_Id_Entrainement_Quantity';")
-    id_training = bigIdValue.one().value
-
     # iterate the data (insert it into cassandra keyspace) :
     data_collect = Final_result.collect()
     query = "INSERT INTO Quantity_result (id , fk , no_assure , id_entrainement , quantite_med , quantite_predicted , qte_rejet_predicted , count_medicament , count_medicament_suspected , num_enr , date_entrainement , date_paiement ) VALUES (now() ,%s, %s ,%s , %s ,%s ,%s ,%s ,%s ,%s ,%s ,%s )"
@@ -165,16 +177,17 @@ try:
                                           row["Rejection"], row["count_Medicament"], row["Count_medicament_suspected"], row["num_enr"], today, row["date_paiement"]])
         num_assuree = num_assuree + 1
 
-    # insert the HistoryTrainings into cassandra table
-    type_training = 1
-    status = " "
-    query = "INSERT INTO HistoryTrainings (id , date , statut , type ) VALUES (%s, %s ,%s ,%s) "
-    adToHistory = session2.execute(
-        query, [id_training, today, status, type_training])
+    # set the status of the training = 1 ( success)
+    success = 1
+    query_success = "UPDATE HistoryTrainings SET status ={} WHERE id ={} and type = 1 ;".format(
+        success, id_training)
+    session2.execute(query_success)
 
-    # Increment the id of training
-    session2.execute(
-        "UPDATE params SET value = value + 1 WHERE param ='Max_Id_Entrainement_Quantity' ;")
-
-except:
+except Exception as e:
     print("An exception occurred")
+    print(e)
+    # set the status of the training = -1 ( failed)
+    faild = -1
+    query_success = "UPDATE HistoryTrainings SET status ={} WHERE id ={} and type = 1 ;".format(
+        faild, id_training)
+    session2.execute(query_success)

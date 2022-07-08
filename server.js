@@ -26,11 +26,13 @@ const authRouter = require("./routes/auth");
 const modelsRoute = require("./routes/models");
 const historiqueRoute = require("./routes/historique");
 const usersRoute = require("./routes/users");
+const DetailsTraRoute = require("./routes/DetailsOfTraining");
 
 app.use("/models", modelsRoute);
 app.use("/historique", historiqueRoute);
 app.use("/users", usersRoute);
 app.use("/auth", authRouter);
+app.use("/DetailsOfTraining", DetailsTraRoute);
 
 app.use(passport.initialize());
 app.use(passport.session());

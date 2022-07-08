@@ -272,8 +272,8 @@ for row in data_collect:
 
 # insert the HistoryTrainings into cassandra table
 type_training = 1
-status = " "
-query = "INSERT INTO HistoryTrainings (id , date , statut , type ) VALUES (%s, %s ,%s ,%s) "
+status = 0
+query = "INSERT INTO HistoryTrainings (id , date , status , type ) VALUES (%s, %s ,%s ,%s) "
 adToHistory = session2.execute(
     query, [id_training, today, status, type_training])
 
