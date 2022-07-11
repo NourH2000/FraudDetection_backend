@@ -14,4 +14,24 @@ const client = new cassandra.Client({
   localDataCenter: "datacenter1",
   keyspace: "fraud",
 });
+
+// find the nomber of drugs suspected
+router.get("/CountMedicamentSuspected/", (req, res) => {
+  const query =
+    "select count(*) , num_enr from Quantity_result where id_entrainement = ? group by num_enr ALLOW FILTERING ;";
+  const idEntrainement = req.query.idEntrainement;
+
+  client
+    .execute(query, [idEntrainement], { prepare: true })
+    .then((result) => {
+      console.log(result);
+      var ResultCountPerNumEnr = result;
+      //The row is an Object with column names as property keys.
+      res.status(200).send(ResultCountPerNumEnr?.rows);
+    })
+    .catch((err) => {
+      console.log("ERROR :", err);
+    });
+});
+
 module.exports = router;
