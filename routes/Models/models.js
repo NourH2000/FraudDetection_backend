@@ -1,8 +1,8 @@
-const pythonShellScript = require("../helpers").pythonShellScript;
+const pythonShellScript = require("../../helpers").pythonShellScript;
 
 const { json } = require("body-parser");
 const express = require("express");
-const db = require("../database");
+const db = require("../../database");
 const router = express.Router();
 
 //data base connection
@@ -11,7 +11,7 @@ const { request } = require("express");
 const client = new cassandra.Client({
   contactPoints: ["127.0.0.1"],
   localDataCenter: "datacenter1",
-  keyspace: "fraud",
+  keyspace: "cnas",
 });
 
 // test route
@@ -41,8 +41,7 @@ router.post("/quantitymodel", (req, res) => {
 //get the maximum date
 
 router.get("/getMaxdate", (req, res) => {
-  const query =
-    "SELECT MAX(date_paiement) as date_paiement_Max FROM Quantity_result";
+  const query = "SELECT MAX(date_paiement) as date_paiement_Max FROM cnas";
   try {
     client.execute(query, function (err, result) {
       var maxDate = result?.rows[0];
@@ -57,8 +56,7 @@ router.get("/getMaxdate", (req, res) => {
 //get the minimum date
 
 router.get("/getMindate", (req, res) => {
-  const query =
-    "SELECT MIN(date_paiement) as date_paiement_Min FROM Quantity_result ";
+  const query = "SELECT MIN(date_paiement) as date_paiement_Min FROM cnas ";
   try {
     client.execute(query, function (err, result) {
       var minDate = result?.rows[0];

@@ -1,4 +1,5 @@
 try:
+
     from pyspark.sql import Window
     from pyspark.sql.functions import round, col
     from datetime import date
@@ -19,25 +20,31 @@ try:
     from pyspark.sql.functions import split, col
 
     # new spark session
-    spark = SparkSession.builder.appName('PPA detection').getOrCreate()
+    spark = SparkSession.builder.appName('Quantity model ').getOrCreate()
 
     # connection to cassandra database and cnas keyspace
     cluster = Cluster(['127.0.0.1'])
 
     # get the Training_date
     today = date.today()
+    # get parameters (start_date and end_date)
+
+    date_debut = sys.argv[1]
+    date_fin = sys.argv[2]
+    print(date_fin)
     # connection to cassandra database and fraud keyspace
-    session2 = cluster.connect('fraud')
+    session2 = cluster.connect('frauddetection')
+
     # get the last id of training
     bigIdValue = session2.execute(
         "select * from params where param='Max_Id_Entrainement_Quantity';")
     id_training = bigIdValue.one().value
-    # insert the HistoryTrainings into cassandra table
+    # insert the History into cassandra table
     type_training = 1
     status = 0
-    query = "INSERT INTO HistoryTrainings (id , date , status , type ) VALUES (%s, %s ,%s ,%s) "
+    query = "INSERT INTO History (id , date , status , type, date_debut , date_fin ) VALUES (%s, %s ,%s ,%s,%s ,%s) "
     addToHistory = session2.execute(
-        query, [id_training, today, status, type_training])
+        query, [id_training, today, status, type_training, date_debut, date_fin])
 
     # Increment the id of training
     session2.execute(
@@ -45,10 +52,6 @@ try:
 
     # connect to the CNAS  database (temporary)
     session = cluster.connect('cnas')
-    # get parameters (start_date and end_date)
-
-    date_debut = sys.argv[1]
-    date_fin = sys.argv[2]
 
     query = "SELECT *  FROM cnas  WHERE date_paiement >= '{}' AND date_paiement <= '{}' LIMIT 300 ALLOW FILTERING;".format(
         date_debut, date_fin)
@@ -169,17 +172,19 @@ try:
 
     # iterate the data (insert it into cassandra keyspace) :
     data_collect = Final_result.collect()
-    query = "INSERT INTO Quantity_result (id , fk , no_assure , id_entrainement , quantite_med , quantite_predicted , qte_rejet_predicted , count_medicament , count_medicament_suspected , num_enr , date_entrainement , date_paiement ) VALUES (now() ,%s, %s ,%s , %s ,%s ,%s ,%s ,%s ,%s ,%s ,%s )"
+    query = "INSERT INTO Quantity_result (id , fk , no_assure , id_entrainement , quantite_med , quantite_predicted , qte_rejet_predicted , count_medicament , count_medicament_suspected  , num_enr , date_entrainement ,date_paiement,affection , age , centre , codeps , date_debut , date_fin , gender  ) VALUES (now() ,%s, %s ,%s,%s ,%s ,%s ,%s,%s ,%s ,%s ,%s ,%s ,%s ,%s ,%s ,%s ,%s ,%s)"
     num_assuree = 1
+    # on doit le changer et ajouter spécialité
+    centre = "ouest"
     for row in data_collect:
         print(row["fk"])
-        future = session2.execute(query, [row["fk"], num_assuree, id_training, row["Descripted_quantity"], row["Predicted_quantity"],
-                                          row["Rejection"], row["count_Medicament"], row["Count_medicament_suspected"], row["num_enr"], today, row["date_paiement"]])
+        future = session2.execute(query, [row["fk"], num_assuree, id_training, row["Descripted_quantity"], row["Predicted_quantity"], row["Rejection"], row["count_Medicament"],
+                                  row["Count_medicament_suspected"], row["num_enr"], today, row["date_paiement"], row["affection"], row["age"], centre, row["codeps"], date_debut, date_fin, row["sexe"]])
         num_assuree = num_assuree + 1
 
     # set the status of the training = 1 ( success)
     success = 1
-    query_success = "UPDATE HistoryTrainings SET status ={} WHERE id ={} and type = 1 ;".format(
+    query_success = "UPDATE History SET status ={} WHERE id ={} and type = 1 ;".format(
         success, id_training)
     session2.execute(query_success)
 
@@ -188,6 +193,6 @@ except Exception as e:
     print(e)
     # set the status of the training = -1 ( failed)
     faild = -1
-    query_success = "UPDATE HistoryTrainings SET status ={} WHERE id ={} and type = 1 ;".format(
+    query_success = "UPDATE History SET status ={} WHERE id ={} and type = 1 ;".format(
         faild, id_training)
     session2.execute(query_success)

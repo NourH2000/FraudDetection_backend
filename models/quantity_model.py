@@ -28,7 +28,7 @@ from pyspark.sql.functions import split, col
 
 
 # new spark session
-spark = SparkSession.builder.appName('PPA detection').getOrCreate()
+spark = SparkSession.builder.appName('Quantity model ').getOrCreate()
 
 
 # In[4]:
