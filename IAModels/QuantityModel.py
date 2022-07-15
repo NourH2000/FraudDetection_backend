@@ -53,7 +53,7 @@ try:
     # connect to the CNAS  database (temporary)
     session = cluster.connect('cnas')
 
-    query = "SELECT *  FROM cnas  WHERE date_paiement >= '{}' AND date_paiement <= '{}' LIMIT 300 ALLOW FILTERING;".format(
+    query = "SELECT *  FROM cnas  WHERE date_paiement >= '{}' AND date_paiement <= '{}'  ALLOW FILTERING;".format(
         date_debut, date_fin)
     rows = session.execute(query)
     # print the data : print(rows)
@@ -170,17 +170,29 @@ try:
     Final_result = Final_result.withColumn('Count_medicament_suspected', F.count(
         'num_enr').over(Window.partitionBy('num_enr')))
 
+    # generer num_assuré
+    from pyspark.sql.functions import rand, when
+    Final_result = Final_result.withColumn(
+        "no_assure", round(rand()*(20-5)+5, 0))
+
+    # count the num_assuré
+    Final_result = Final_result.withColumn('count_assure', F.count(
+        'no_assure').over(Window.partitionBy('no_assure')))
+    Final_result.select("count_assure").show()
+
     # iterate the data (insert it into cassandra keyspace) :
     data_collect = Final_result.collect()
     query = "INSERT INTO Quantity_result (id , fk , no_assure , id_entrainement , quantite_med , quantite_predicted , qte_rejet_predicted , count_medicament , count_medicament_suspected  , num_enr , date_entrainement ,date_paiement,affection , age , centre , codeps , date_debut , date_fin , gender  ) VALUES (now() ,%s, %s ,%s,%s ,%s ,%s ,%s,%s ,%s ,%s ,%s ,%s ,%s ,%s ,%s ,%s ,%s ,%s)"
-    num_assuree = 1
+    queryAssure = "INSERT INTO assure_result (id , fk , no_assure , id_entrainement , quantite_med , quantite_predicted , qte_rejet_predicted , count_assure  , num_enr , date_entrainement ,date_paiement,affection , age , centre , codeps , date_debut , date_fin , gender  ) VALUES (now() ,%s, %s ,%s ,%s ,%s ,%s,%s ,%s ,%s ,%s ,%s ,%s ,%s ,%s ,%s ,%s ,%s)"
+
     # on doit le changer et ajouter spécialité
     centre = "ouest"
     for row in data_collect:
         print(row["fk"])
-        future = session2.execute(query, [row["fk"], num_assuree, id_training, row["Descripted_quantity"], row["Predicted_quantity"], row["Rejection"], row["count_Medicament"],
+        future = session2.execute(query, [row["fk"], row["no_assure"], id_training, row["Descripted_quantity"], row["Predicted_quantity"], row["Rejection"], row["count_Medicament"],
                                   row["Count_medicament_suspected"], row["num_enr"], today, row["date_paiement"], row["affection"], row["age"], centre, row["codeps"], date_debut, date_fin, row["sexe"]])
-        num_assuree = num_assuree + 1
+        Assure = session2.execute(queryAssure, [row["fk"], row["no_assure"], id_training, row["Descripted_quantity"], row["Predicted_quantity"], row["Rejection"],
+                                  row["count_assure"], row["num_enr"], today, row["date_paiement"], row["affection"], row["age"], centre, row["codeps"], date_debut, date_fin, row["sexe"]])
 
     # set the status of the training = 1 ( success)
     success = 1

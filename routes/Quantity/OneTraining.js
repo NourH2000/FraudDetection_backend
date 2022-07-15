@@ -57,4 +57,24 @@ router.get("/CountMedicamentSuspected/", (req, res) => {
     });
 });
 
+// find the nomber of assurée suspected
+router.get("/CountAssuresSuspected/", (req, res) => {
+  const query =
+    "select no_assure ,num_enr, count_assure  , affection , age , gender from assure_result where id_entrainement = ? group by no_assure ALLOW FILTERING ;";
+  const idEntrainement = req.query.idEntrainement;
+
+  client
+    .execute(query, [idEntrainement], { prepare: true })
+    .then((result) => {
+      console.log(result);
+      var ResultCountPerAssure = result;
+      //The row is an Object with column names as property keys.
+      res.status(200).send(ResultCountPerAssure?.rows);
+    })
+    .catch((err) => {
+      res.status(400).send("err");
+      console.log("ERROR :", err);
+    });
+});
+
 module.exports = router;

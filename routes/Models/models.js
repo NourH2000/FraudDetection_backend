@@ -29,7 +29,7 @@ router.post("/quantitymodel", (req, res) => {
     //replace this dates with the ones you will receive from req.body
     args: [date_debut, date_fin],
   };
-  const path = "models/QuantityModel.py";
+  const path = "IAModels/QuantityModel.py";
   try {
     pythonShellScript(path, options);
     console.log("hello");
