@@ -60,4 +60,26 @@ router.get("/CountAssuresSuspected/", (req, res) => {
     });
 });
 
+// get count of each centre One medication
+router.get("/CountCenterSuspected/", (req, res) => {
+  const query =
+    "select count(*) as count , num_enr from Quantity_result where id_entrainement =? and centre =? and num_enr =? group by num_enr ALLOW FILTERING ;";
+
+  const idEntrainement = req.query.idEntrainement;
+  const numEnr = req.query.numEnr;
+  const centre = req.query.centre;
+  client
+    .execute(query, [idEntrainement, centre, numEnr], { prepare: true })
+    .then((result) => {
+      console.log(result);
+      var ResultCountPerAssure = result;
+      //The row is an Object with column names as property keys.
+      res.status(200).send(ResultCountPerAssure?.rows);
+    })
+    .catch((err) => {
+      res.status(400).send("err");
+      console.log("ERROR :", err);
+    });
+});
+
 module.exports = router;

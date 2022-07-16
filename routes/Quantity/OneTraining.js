@@ -60,11 +60,32 @@ router.get("/CountMedicamentSuspected/", (req, res) => {
 // find the nomber of assurée suspected
 router.get("/CountAssuresSuspected/", (req, res) => {
   const query =
-    "select no_assure ,num_enr, count_assure  , affection , age , gender from assure_result where id_entrainement = ? group by no_assure ALLOW FILTERING ;";
+    "select no_assure ,num_enr, count_assure  , affection , age , gender from assure_result where id_entrainement = ? group by no_assure ALLOW FILTERING   ;";
   const idEntrainement = req.query.idEntrainement;
 
   client
     .execute(query, [idEntrainement], { prepare: true })
+    .then((result) => {
+      console.log(result);
+      var ResultCountPerAssure = result;
+      //The row is an Object with column names as property keys.
+      res.status(200).send(ResultCountPerAssure?.rows);
+    })
+    .catch((err) => {
+      res.status(400).send("err");
+      console.log("ERROR :", err);
+    });
+});
+
+// get count of each centre By medication (ouest)
+router.get("/CountCenterSuspected/", (req, res) => {
+  const query =
+    "select count(*), num_enr from Quantity_result where id_entrainement =? and centre =?  group by num_enr ALLOW FILTERING ;";
+
+  const idEntrainement = req.query.idEntrainement;
+  const centre = req.query.centre;
+  client
+    .execute(query, [idEntrainement, centre], { prepare: true })
     .then((result) => {
       console.log(result);
       var ResultCountPerAssure = result;
