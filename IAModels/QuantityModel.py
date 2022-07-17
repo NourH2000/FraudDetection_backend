@@ -185,10 +185,13 @@ try:
     query = "INSERT INTO Quantity_result (id , fk , no_assure , id_entrainement , quantite_med , quantite_predicted , qte_rejet_predicted , count_medicament , count_medicament_suspected  , num_enr , date_entrainement ,date_paiement,affection , age , centre , codeps , date_debut , date_fin , gender  ) VALUES (now() ,%s, %s ,%s,%s ,%s ,%s ,%s,%s ,%s ,%s ,%s ,%s ,%s ,%s ,%s ,%s ,%s ,%s)"
     queryAssure = "INSERT INTO assure_result (id , fk , no_assure , id_entrainement , quantite_med , quantite_predicted , qte_rejet_predicted , count_assure  , num_enr , date_entrainement ,date_paiement,affection , age , centre , codeps , date_debut , date_fin , gender  ) VALUES (now() ,%s, %s ,%s ,%s ,%s ,%s,%s ,%s ,%s ,%s ,%s ,%s ,%s ,%s ,%s ,%s ,%s)"
 
-    # on doit le changer et ajouter spécialité
-    centre = "ouest"
+    # on doit le changer ( random center) et ajouter spécialité
+    import random
+    a = ["Ouest", "Est", "Sud", "Nord"]
+
     for row in data_collect:
-        print(row["fk"])
+        # print(row["fk"])
+        centre = random.choice(a)
         future = session2.execute(query, [row["fk"], row["no_assure"], id_training, row["Descripted_quantity"], row["Predicted_quantity"], row["Rejection"], row["count_Medicament"],
                                   row["Count_medicament_suspected"], row["num_enr"], today, row["date_paiement"], row["affection"], row["age"], centre, row["codeps"], date_debut, date_fin, row["sexe"]])
         Assure = session2.execute(queryAssure, [row["fk"], row["no_assure"], id_training, row["Descripted_quantity"], row["Predicted_quantity"], row["Rejection"],

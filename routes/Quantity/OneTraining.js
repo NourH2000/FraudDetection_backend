@@ -77,7 +77,7 @@ router.get("/CountAssuresSuspected/", (req, res) => {
     });
 });
 
-// get count of each centre By medication (ouest)
+// get count of each centre By medication ( center , medication )
 router.get("/CountCenterSuspected/", (req, res) => {
   const query =
     "select count(*), num_enr from Quantity_result where id_entrainement =? and centre =?  group by num_enr ALLOW FILTERING ;";
@@ -98,4 +98,73 @@ router.get("/CountCenterSuspected/", (req, res) => {
     });
 });
 
+// get count of one centre ( centre => count )
+router.get("/CountCenterSuspected/", (req, res) => {
+  const query =
+    "select count(*) as count  from Quantity_result where id_entrainement =? and centre =?   ALLOW FILTERING ;";
+
+  const idEntrainement = req.query.idEntrainement;
+
+  const centre = req.query.centre;
+  client
+    .execute(query, [idEntrainement, centre], { prepare: true })
+    .then((result) => {
+      console.log(result);
+      var ResultCountPerAssure = result;
+      //The row is an Object with column names as property keys.
+      res.status(200).send(ResultCountPerAssure?.rows);
+    })
+    .catch((err) => {
+      res.status(400).send("err");
+      console.log("ERROR :", err);
+    });
+});
+
+// count the number of medication with center : this query will be traited in the front end , because we
+// don't have a table that allows us to do a group by Center query
+
+// get count of each centre ( centre => num_enr )
+router.get("/CountCenterMedication/", (req, res) => {
+  const query =
+    "select num_enr , centre from Quantity_result where id_entrainement =?    ALLOW FILTERING ;";
+
+  const idEntrainement = req.query.idEntrainement;
+
+  client
+    .execute(query, [idEntrainement], { prepare: true })
+    .then((result) => {
+      console.log(result);
+      var ResultCountPerAssure = result;
+      //The row is an Object with column names as property keys.
+      res.status(200).send(ResultCountPerAssure?.rows);
+    })
+    .catch((err) => {
+      res.status(400).send("err");
+      console.log("ERROR :", err);
+    });
+});
+
+// count the number of medication with Codeps ( pharmacie) : this query will be traited in the front end , because we
+// don't have a table that allows us to do a group by codeps query
+
+// get count of each codeps ( codeps => num_enr )
+router.get("/CountCodepsMedication/", (req, res) => {
+  const query =
+    "select num_enr , codeps from Quantity_result where id_entrainement =?    ALLOW FILTERING ;";
+
+  const idEntrainement = req.query.idEntrainement;
+
+  client
+    .execute(query, [idEntrainement], { prepare: true })
+    .then((result) => {
+      console.log(result);
+      var ResultCountPerAssure = result;
+      //The row is an Object with column names as property keys.
+      res.status(200).send(ResultCountPerAssure?.rows);
+    })
+    .catch((err) => {
+      res.status(400).send("err");
+      console.log("ERROR :", err);
+    });
+});
 module.exports = router;
