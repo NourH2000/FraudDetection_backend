@@ -31,7 +31,7 @@ try:
 
     date_debut = sys.argv[1]
     date_fin = sys.argv[2]
-    print(date_fin)
+
     # connection to cassandra database and fraud keyspace
     session2 = cluster.connect('frauddetection')
 
