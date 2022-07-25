@@ -22,19 +22,35 @@ app.use(
 );
 
 // les routes
+
 const authRouter = require("./routes/Authentification/auth");
 const modelsRoute = require("./routes/Models/models");
-const historiqueQRoute = require("./routes/Quantity/historique");
 const usersRoute = require("./routes/Authentification/users");
+
+// Quantity
+const historiqueQRoute = require("./routes/Quantity/historique");
 const DetailsTrainingQRoute = require("./routes/Quantity/OneTraining");
 const DetailsOfMedicationQRoute = require("./routes/Quantity/OneMedication");
 
+// PPa
+const historiquePRoute = require("./routes/PPa/historique");
+const DetailsTrainingPRoute = require("./routes/PPa/OneTraining");
+const DetailsOfMedicationPRoute = require("./routes/PPa/OneMedication");
+
+// auth
 app.use("/models", modelsRoute);
-app.use("/historiqueQ", historiqueQRoute);
 app.use("/users", usersRoute);
 app.use("/auth", authRouter);
+
+// Quantity
+app.use("/historiqueQ", historiqueQRoute);
 app.use("/DetailsOfTrainingQ", DetailsTrainingQRoute);
 app.use("/DetailsOfMedicationQ", DetailsOfMedicationQRoute);
+
+// PPa
+app.use("/historiqueP", historiquePRoute);
+app.use("/DetailsOfTrainingP", DetailsTrainingPRoute);
+app.use("/DetailsOfMedicationP", DetailsOfMedicationPRoute);
 
 app.use(passport.initialize());
 app.use(passport.session());

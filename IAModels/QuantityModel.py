@@ -187,7 +187,9 @@ try:
 
     # on doit le changer ( random center) et ajouter spécialité
     import random
-    a = ["Ouest", "Est", "Sud", "Nord"]
+    a = []
+    for i in range(58):
+        a.append(i+1)
 
     for row in data_collect:
         # print(row["fk"])

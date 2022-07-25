@@ -38,6 +38,26 @@ router.get("/ByMedication/", (req, res) => {
     });
 });
 
+// get all the History Of Quantity_result groupedBy num_enr and idEntrainement with one assure
+router.get("/ByMedicationOneassure/", (req, res) => {
+  const query =
+    "select * from Quantity_result where id_entrainement = ? and no_assure = ?  group by num_enr  ALLOW FILTERING ;";
+  const idEntrainement = req.query.idEntrainement;
+  const no_assure = req.query.no_assure;
+
+  client
+    .execute(query, [idEntrainement, no_assure], { prepare: true })
+    .then((result) => {
+      //console.log(result);
+      var ResultGroupedByNumEnrAndID = result;
+      //The row is an Object with column names as property keys.
+      res.status(200).send(ResultGroupedByNumEnrAndID?.rows);
+    })
+    .catch((err) => {
+      console.log("ERROR :", err);
+    });
+});
+
 // find the nomber of drugs suspected
 router.get("/CountMedicamentSuspected/", (req, res) => {
   const query =
@@ -60,7 +80,7 @@ router.get("/CountMedicamentSuspected/", (req, res) => {
 // find the nomber of assurée suspected
 router.get("/CountAssuresSuspected/", (req, res) => {
   const query =
-    "select no_assure ,num_enr, count_assure  , affection , age , gender from assure_result where id_entrainement = ? group by no_assure ALLOW FILTERING   ;";
+    "select no_assure ,num_enr, count_assure  , affection , age , gender , centre from assure_result where id_entrainement = ? group by no_assure ALLOW FILTERING   ;";
   const idEntrainement = req.query.idEntrainement;
 
   client
@@ -144,6 +164,28 @@ router.get("/CountCenterMedication/", (req, res) => {
     });
 });
 
+// get count of each centre ( centre => num_enr ) where center
+router.get("/CountOneCenterMedication/", (req, res) => {
+  const query =
+    "select count(*) , num_enr    from Quantity_result where id_entrainement =? and centre = ? group by num_enr      ALLOW FILTERING ;";
+
+  const idEntrainement = req.query.idEntrainement;
+  const centre = req.query.centre;
+
+  client
+    .execute(query, [idEntrainement, centre], { prepare: true })
+    .then((result) => {
+      console.log(result);
+      var ResultCountPerAssure = result;
+      //The row is an Object with column names as property keys.
+      res.status(200).send(ResultCountPerAssure?.rows);
+    })
+    .catch((err) => {
+      res.status(400).send("err");
+      console.log("ERROR :", err);
+    });
+});
+
 // count the number of medication with Codeps ( pharmacie) : this query will be traited in the front end , because we
 // don't have a table that allows us to do a group by codeps query
 
@@ -152,6 +194,51 @@ router.get("/CountCodepsMedication/", (req, res) => {
   const query =
     "select num_enr , codeps from Quantity_result where id_entrainement =?    ALLOW FILTERING ;";
 
+  const idEntrainement = req.query.idEntrainement;
+
+  client
+    .execute(query, [idEntrainement], { prepare: true })
+    .then((result) => {
+      console.log(result);
+      var ResultCountPerAssure = result;
+      //The row is an Object with column names as property keys.
+      res.status(200).send(ResultCountPerAssure?.rows);
+    })
+    .catch((err) => {
+      res.status(400).send("err");
+      console.log("ERROR :", err);
+    });
+});
+
+// get result by assuré
+
+// get count of one centre ( centre => count )
+router.get("/Byassure/", (req, res) => {
+  const query =
+    "select *  from assure_result where id_entrainement =? and no_assure =?   ALLOW FILTERING ;";
+
+  const idEntrainement = req.query.idEntrainement;
+  const no_assure = req.query.no_assure;
+
+  client
+    .execute(query, [idEntrainement, no_assure], { prepare: true })
+    .then((result) => {
+      console.log(result);
+      var ResultCountPerAssure = result;
+      //The row is an Object with column names as property keys.
+      res.status(200).send(ResultCountPerAssure?.rows);
+    })
+    .catch((err) => {
+      res.status(400).send("err");
+      console.log("ERROR :", err);
+    });
+});
+
+// all grouoed by assuuré
+// find the nomber of assurée suspected with no groupe
+router.get("/CountAssuresSuspectedAll/", (req, res) => {
+  const query =
+    "select *  from assure_result where id_entrainement = ?  ALLOW FILTERING   ;";
   const idEntrainement = req.query.idEntrainement;
 
   client
