@@ -42,7 +42,8 @@ try:
     # insert the History into cassandra table
     type_training = 1
     status = 0
-    query = "INSERT INTO History (id , date , status , type, date_debut , date_fin ) VALUES (%s, %s ,%s ,%s,%s ,%s) "
+
+    query = "INSERT INTO History (id , date , status , type, date_debut , date_fin) VALUES (%s, %s ,%s ,%s,%s ,%s) "
     addToHistory = session2.execute(
         query, [id_training, today, status, type_training, date_debut, date_fin])
 
@@ -201,8 +202,10 @@ try:
 
     # set the status of the training = 1 ( success)
     success = 1
-    query_success = "UPDATE History SET status ={} WHERE id ={} and type = 1 ;".format(
-        success, id_training)
+    seen = 0
+
+    query_success = "UPDATE History SET status ={} , seen={} WHERE id ={} and type = 1 ;".format(
+        success, seen, id_training)
     session2.execute(query_success)
 
 except Exception as e:
@@ -210,6 +213,7 @@ except Exception as e:
     print(e)
     # set the status of the training = -1 ( failed)
     faild = -1
-    query_success = "UPDATE History SET status ={} WHERE id ={} and type = 1 ;".format(
-        faild, id_training)
+    seen = 0
+    query_success = "UPDATE History SET status ={} , seen={} WHERE id ={} and type = 1 ;".format(
+        faild, seen, id_training)
     session2.execute(query_success)

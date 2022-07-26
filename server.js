@@ -21,7 +21,7 @@ app.use(
   })
 );
 
-// les routes
+/* les routes*/
 
 const authRouter = require("./routes/Authentification/auth");
 const modelsRoute = require("./routes/Models/models");
@@ -36,6 +36,11 @@ const DetailsOfMedicationQRoute = require("./routes/Quantity/OneMedication");
 const historiquePRoute = require("./routes/PPa/historique");
 const DetailsTrainingPRoute = require("./routes/PPa/OneTraining");
 const DetailsOfMedicationPRoute = require("./routes/PPa/OneMedication");
+
+// AppBar
+const NotificationRoute = require("./routes/AppBar/Notification");
+
+/**/
 
 // auth
 app.use("/models", modelsRoute);
@@ -54,6 +59,9 @@ app.use("/DetailsOfMedicationP", DetailsOfMedicationPRoute);
 
 app.use(passport.initialize());
 app.use(passport.session());
+
+// appBar
+app.use("/Notification", NotificationRoute);
 
 /*client.execute(query)
   .then(result => console.log('User with username %s', result.rows[1].username));*/
