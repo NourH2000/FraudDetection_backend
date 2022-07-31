@@ -18,7 +18,8 @@ router.get("/", (req, res) => {
 
 // get count of notifications unseen yet
 router.get("/NotificationCount", (req, res) => {
-  const query = "SELECT  id FROM History where seen = ?   ALLOW FILTERING   ;";
+  const query =
+    "SELECT  count(*) FROM notification where seen = ?   ALLOW FILTERING   ;";
   const seen = 0;
 
   client
@@ -34,7 +35,8 @@ router.get("/NotificationCount", (req, res) => {
 
 // get data of notifications unseen yet
 router.get("/NotificationData", (req, res) => {
-  const query = "SELECT * FROM History where seen = ?  ALLOW FILTERING   ;";
+  const query =
+    "SELECT * FROM notification where seen = ?  ALLOW FILTERING   ;";
   const seen = 0;
 
   client
@@ -49,12 +51,27 @@ router.get("/NotificationData", (req, res) => {
 });
 
 // get data of notifications unseen yet
-router.get("/NotificationUpdate", (req, res) => {
-  const query = "UPDATE History SET seen =? where type in(1,2) and id=?   ;";
-  const seen = 1;
-  const ids = req.query.ids;
+router.get("/NotificationAllId", (req, res) => {
+  const query = "select id from notification where seen = ? ALLOW FILTERING;";
+  const seen = 0;
   client
-    .execute(query, [seen, ids], { prepare: true })
+    .execute(query, [seen], { prepare: true })
+    .then((result) => {
+      var historyOfTraining = result;
+      res.status(200).send(historyOfTraining?.rows);
+    })
+    .catch((err) => {
+      console.log("ER0OR :", err);
+    });
+});
+
+// get data of notifications unseen yet
+router.get("/NotificationUpdate", (req, res) => {
+  const query = "UPDATE notification SET seen =?  where id =? ;";
+  const seen = 1;
+  const id = req.query.id;
+  client
+    .execute(query, [seen, id], { prepare: true })
     .then((result) => {
       var historyOfTraining = result;
       res.status(200).send(historyOfTraining?.rows);

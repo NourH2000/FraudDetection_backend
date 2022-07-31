@@ -185,6 +185,7 @@ try:
     data_collect = Final_result.collect()
     query = "INSERT INTO Quantity_result (id , fk , no_assure , id_entrainement , quantite_med , quantite_predicted , qte_rejet_predicted , count_medicament , count_medicament_suspected  , num_enr , date_entrainement ,date_paiement,affection , age , centre , codeps , date_debut , date_fin , gender  ) VALUES (now() ,%s, %s ,%s,%s ,%s ,%s ,%s,%s ,%s ,%s ,%s ,%s ,%s ,%s ,%s ,%s ,%s ,%s)"
     queryAssure = "INSERT INTO assure_result (id , fk , no_assure , id_entrainement , quantite_med , quantite_predicted , qte_rejet_predicted , count_assure  , num_enr , date_entrainement ,date_paiement,affection , age , centre , codeps , date_debut , date_fin , gender  ) VALUES (now() ,%s, %s ,%s ,%s ,%s ,%s,%s ,%s ,%s ,%s ,%s ,%s ,%s ,%s ,%s ,%s ,%s)"
+    queryNotification = "INSERT INTO notification (id  , id_entrainement , msg , seen , status , type ) VALUES (now() ,%s, %s ,%s , %s ,%s)"
 
     # on doit le changer ( random center) et ajouter spécialité
     import random
@@ -202,18 +203,36 @@ try:
 
     # set the status of the training = 1 ( success)
     success = 1
-    seen = 0
 
-    query_success = "UPDATE History SET status ={} , seen={} WHERE id ={} and type = 1 ;".format(
-        success, seen, id_training)
+    query_success = "UPDATE History SET status ={}  WHERE id ={} and type = 1 ;".format(
+        success, id_training)
     session2.execute(query_success)
+
+    # insert into notification
+    # Message
+    msg = f'The training number {id_training} was completed successfully'
+    typeTraining = 1
+    seen = 0
+    status = 0
+
+    Notification = session2.execute(
+        queryNotification, [id_training, msg, seen, status,  typeTraining])
 
 except Exception as e:
     print("An exception occurred")
     print(e)
     # set the status of the training = -1 ( failed)
     faild = -1
-    seen = 0
-    query_success = "UPDATE History SET status ={} , seen={} WHERE id ={} and type = 1 ;".format(
-        faild, seen, id_training)
+
+    query_success = "UPDATE History SET status ={} WHERE id ={} and type = 1 ;".format(
+        faild, id_training)
     session2.execute(query_success)
+
+   # Message
+    msg = f'The training number {id_training} has failed'
+    typeTraining = 1
+    seen = 0
+    status = 0
+
+    Notification = session2.execute(
+        queryNotification, [id_training, msg, seen, status,  typeTraining])

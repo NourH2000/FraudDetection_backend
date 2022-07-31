@@ -159,6 +159,7 @@ try:
     query = "INSERT INTO ppa_result (id , id_entrainement , num_enr , count_medicament_suspected, centre , codeps , count_medicament , count_medicament_inf , count_medicament_sup , date_debut , date_fin , date_entrainement  , fk  , prix_ppa , prix_min , prix_max , outside ) VALUES (now() ,%s ,%s  ,%s ,%s ,%s ,%s ,%s ,%s ,%s ,%s ,%s  ,%s ,%s ,%s  ,%s ,%s  )"
 
     queryPha = "INSERT INTO Pharmacy_result (id , id_entrainement , num_enr ,codeps , count_pharmacy , centre , date_debut , date_fin , date_entrainement , fk , prix_ppa , prix_min , prix_max , outside) VALUES (now() ,%s ,%s  ,%s ,%s ,%s ,%s ,%s ,%s  ,%s ,%s ,%s ,%s ,%s  )"
+    queryNotification = "INSERT INTO notification (id  , id_entrainement , msg , seen , status , type ) VALUES (now() ,%s, %s ,%s , %s ,%s)"
 
     for row in data_collect:
         centre = random.choice(a)
@@ -169,10 +170,20 @@ try:
 
     # set the status of the training = 1 ( success)
     success = 1
-    seen = 0
-    query_success = "UPDATE History SET status ={} , seen={} WHERE id ={} and type = 2 ;".format(
-        success, seen, id_training)
+
+    query_success = "UPDATE History SET status ={}  WHERE id ={} and type = 2 ;".format(
+        success, id_training)
     session2.execute(query_success)
+
+# insert into notification
+    # Message
+    msg = f'The training number {id_training} was completed successfully'
+    typeTraining = 2
+    seen = 0
+    status = 1
+
+    Notification = session2.execute(
+        queryNotification, [id_training, msg, seen, status,  typeTraining])
 
 
 except Exception as e:
@@ -180,7 +191,17 @@ except Exception as e:
     print(e)
     # set the status of the training = -1 ( failed)
     faild = -1
-    seen = 0
-    query_success = "UPDATE History SET status ={}, seen={} WHERE id ={} and type = 2 ;".format(
-        faild, seen, id_training)
+
+    query_success = "UPDATE History SET status ={} WHERE id ={} and type = 2 ;".format(
+        faild, id_training)
     session2.execute(query_success)
+
+    # insert into notification
+    # Message
+    msg = f'The training number {id_training} was completed successfully'
+    typeTraining = 1
+    seen = 0
+    status = 0
+
+    Notification = session2.execute(
+        queryNotification, [id_training, msg, seen, status,  typeTraining])
